@@ -53,7 +53,7 @@ if potencial_imobiliario:
 # Filtro de zonas
 zonas_filtradas = st.multiselect('Zonas de Interesse', lookup_filtered['Tipo de Zona'].unique())
 # filter gdf by zonas_filtradas
-gdf_filtered = sp_zonas[sp_zonas['zl_zona'].isin(zonas_filtradas) & (lookup_f_op['Operação Urbana'].isna() | lookup_f_op['Operação Urbana'] == True)]
+gdf_filtered = sp_zonas[sp_zonas['zl_zona'].isin(zonas_filtradas)]
 #Filtro de operações urbanas
 if operação_urbana:
     gdf_filtered = gdf_filtered[gdf_filtered['OUCAB'] == True]
