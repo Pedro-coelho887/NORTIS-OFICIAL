@@ -50,7 +50,7 @@ sp_distritos = load_and_prepare_data(distritos)
 quadras = encontrar_arquivo('quadras_z_d_u.shp')
 sp_zonas = load_and_prepare_data(quadras)
 
-operacao_urbana = encontrar_arquivo('Zonas_fora_de_operacao_urbana.xlsx')
+operacao_urbana = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att.xlsx')
 lookup_f_op = pd.read_excel(operacao_urbana)
 
 # lookup zonas fora de operacao urbana
