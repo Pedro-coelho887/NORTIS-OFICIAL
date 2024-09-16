@@ -2,8 +2,8 @@ import streamlit as st
 import plotly.graph_objects as go
 import geopandas as gpd
 
-file_path = "data/distritos_shape/distritos.geojson"
-gdf_fronteiras = gpd.read_file(file_path)
+# file_path = "data/distritos_shape/distritos.geojson"
+# gdf_fronteiras = gpd.read_file(file_path)
 
 # Função para traçar as fronteiras dos distritos
 def plot_borders(gdf,fig_o, width=1800, height=1200, mapbox_style="open-street-map"):
