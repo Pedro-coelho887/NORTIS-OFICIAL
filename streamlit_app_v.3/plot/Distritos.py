@@ -6,8 +6,8 @@ import geopandas as gpd
 MAPBOX_USERNAME = "projetodados"
 MAPBOX_ACCESS_TOKEN = "pk.eyJ1IjoicHJvamV0b2RhZG9zIiwiYSI6ImNtMXdiOTEydDA1czEyaW41MDYwamIwdGQifQ.CntGc8JTYWf6b9tveFDAVQ"
 
-file_path = "data/distritos_shape/distritos.geojson"
-gdf_fronteiras = gpd.read_file(file_path)
+# file_path = "data/distritos_shape/distritos.geojson"
+# gdf_fronteiras = gpd.read_file(file_path)
 
 # Set the Mapbox access token globally
 go.Figure().update_layout(mapbox=dict(accesstoken=MAPBOX_ACCESS_TOKEN))
