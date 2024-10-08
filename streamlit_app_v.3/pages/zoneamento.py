@@ -69,8 +69,8 @@ def gdf_to_df(gdf):
 # PROCESSAMENTO
 # Carregar os dados de zonas
 distritos = encontrar_arquivo('distritos.geojson')
-sp_distritos = load_and_prepare_data(distritos)
-quadras = encontrar_arquivo('quadras_z_d_u.shp')
+sp_distritos = load_and_prepare_dataframe(distritos)
+quadras = encontrar_arquivo('quadras_z_d_o_rng04')
 sp_zonas = load_and_prepare_data(quadras)
 # lookup zonas fora de operacao urbana
 operacao_urbana = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
