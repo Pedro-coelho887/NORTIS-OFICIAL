@@ -133,7 +133,7 @@ lookup_filtered = lookup_f_op[(lookup_f_op['Potencial'].isin(filtro_potencial))]
 zonas_filtradas = st.selectbox('Zonas de Interesse', sorted(lookup_filtered['Tipo de Zona'].unique()))
 # Filtro por zonas
 if zonas_filtradas:
-    arquivo_zona_filtrada = encontrar_diretorio('data/shapefiles/loteamento/' + str(zonas_filtradas))
+    arquivo_zona_filtrada = encontrar_diretorio(str(zonas_filtradas))
     gdf_filtered = load_and_prepare_data(arquivo_zona_filtrada)
     # Filtro de operações urbanas
     # if operação_urbana:
