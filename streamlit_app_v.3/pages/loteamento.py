@@ -33,6 +33,31 @@ def encontrar_arquivo(nome_arquivo):
                 return os.path.join(raiz, nome_arquivo)
 
     return None  # Arquivo não encontrado
+def encontrar_diretorio(nome_diretorio):
+    # Começa na pasta atual se nenhuma for especificada
+    pasta_inicial = os.path.abspath(os.path.dirname(__file__))
+
+    # Lista de pastas a verificar, começando pela inicial
+    pastas_a_verificar = []
+
+    # Subir até a raiz, adicionando cada pasta à lista
+    while True:
+        pastas_a_verificar.append(pasta_inicial)
+
+        # Se já estivermos na raiz, interrompe o loop
+        nova_pasta = os.path.dirname(pasta_inicial)
+        if nova_pasta == pasta_inicial:  # Isso significa que já estamos na raiz
+            break
+
+        pasta_inicial = nova_pasta
+
+    # Agora, desce recursivamente a partir da raiz
+    for pasta in pastas_a_verificar:
+        for raiz, subpastas, arquivos in os.walk(pasta):
+            if nome_diretorio in subpastas:  # Verifica se o diretório está nas subpastas
+                return os.path.join(raiz, nome_diretorio)
+
+    return None  # Diretório não encontrado
 # Carregar e preparar dados
 @st.cache_data
 def load_and_prepare_data(directory_path):
@@ -108,7 +133,8 @@ lookup_filtered = lookup_f_op[(lookup_f_op['Potencial'].isin(filtro_potencial))]
 zonas_filtradas = st.selectbox('Zonas de Interesse', sorted(lookup_filtered['Tipo de Zona'].unique()))
 # Filtro por zonas
 if zonas_filtradas:
-    gdf_filtered = load_and_prepare_data('data/shapefiles/loteamento/' + str(zonas_filtradas))
+    arquivo_zona_filtrada = encontrar_diretorio('data/shapefiles/loteamento/' + str(zonas_filtradas))
+    gdf_filtered = load_and_prepare_data(arquivo_zona_filtrada)
     # Filtro de operações urbanas
     # if operação_urbana:
     #     gdf_filtered = gdf_filtered[gdf_filtered['OUCAB'] == True]
