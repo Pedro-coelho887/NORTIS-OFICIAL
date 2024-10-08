@@ -36,7 +36,31 @@ def encontrar_arquivo(nome_arquivo):
                 return os.path.join(raiz, nome_arquivo)
 
     return None  # Arquivo não encontrado
+def encontrar_diretorio(nome_diretorio):
+    # Começa na pasta atual se nenhuma for especificada
+    pasta_inicial = os.path.abspath(os.path.dirname(__file__))
 
+    # Lista de pastas a verificar, começando pela inicial
+    pastas_a_verificar = []
+
+    # Subir até a raiz, adicionando cada pasta à lista
+    while True:
+        pastas_a_verificar.append(pasta_inicial)
+
+        # Se já estivermos na raiz, interrompe o loop
+        nova_pasta = os.path.dirname(pasta_inicial)
+        if nova_pasta == pasta_inicial:  # Isso significa que já estamos na raiz
+            break
+
+        pasta_inicial = nova_pasta
+
+    # Agora, desce recursivamente a partir da raiz
+    for pasta in pastas_a_verificar:
+        for raiz, subpastas, arquivos in os.walk(pasta):
+            if nome_diretorio in subpastas:  # Verifica se o diretório está nas subpastas
+                return os.path.join(raiz, nome_diretorio)
+
+    return None  # Diretório não encontrado
 
 @st.cache_data
 def load_and_prepare_data(directory_path):
@@ -70,7 +94,7 @@ def gdf_to_df(gdf):
 # Carregar os dados de zonas
 distritos = encontrar_arquivo('distritos.geojson')
 sp_distritos = load_and_prepare_dataframe(distritos)
-quadras = encontrar_arquivo('quadras_z_d_o_rng04')
+quadras = encontrar_diretorio('quadras_z_d_o_rng04')
 sp_zonas = load_and_prepare_data(quadras)
 # lookup zonas fora de operacao urbana
 operacao_urbana = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
