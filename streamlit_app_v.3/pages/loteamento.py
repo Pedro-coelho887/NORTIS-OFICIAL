@@ -62,7 +62,8 @@ def gdf_to_df(gdf):
 distritos = encontrar_arquivo('distritos.geojson')
 sp_distritos = load_and_prepare_dataframe(distritos)
 # lookup zonas fora de operacao urbana
-lookup_f_op = pd.read_excel(Path('data/lookups/Zonas_fora_de_operacao_urbana_att_2.xlsx'))
+operacao_urbana = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
+lookup_f_op = pd.read_excel(operacao_urbana)
 lookup_f_op["Potencial para projeto imobiliário?"] = lookup_f_op["Potencial para projeto imobiliário"].map(
     {1: True, 0: False})
 ca_max = lookup_f_op['C.A Máximo'].max()
