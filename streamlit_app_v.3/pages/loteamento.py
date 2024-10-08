@@ -8,7 +8,31 @@ import os
 from plot.plot_zones import plot_zones_with_colors
 from plot.Distritos import plot_borders
 
+def encontrar_arquivo(nome_arquivo):
+    # Começa na pasta atual se nenhuma for especificada
+    pasta_inicial = os.path.abspath(os.path.dirname(__file__))
 
+    # Lista de pastas a verificar, começando pela inicial
+    pastas_a_verificar = []
+
+    # Subir até a raiz, adicionando cada pasta à lista
+    while True:
+        pastas_a_verificar.append(pasta_inicial)
+
+        # Se já estivermos na raiz, interrompe o loop
+        nova_pasta = os.path.dirname(pasta_inicial)
+        if nova_pasta == pasta_inicial:  # Isso significa que já estamos na raiz
+            break
+
+        pasta_inicial = nova_pasta
+
+    # Agora, desce recursivamente a partir da raiz
+    for pasta in pastas_a_verificar:
+        for raiz, subpastas, arquivos in os.walk(pasta):
+            if nome_arquivo in arquivos:
+                return os.path.join(raiz, nome_arquivo)
+
+    return None  # Arquivo não encontrado
 # Carregar e preparar dados
 @st.cache_data
 def load_and_prepare_data(directory_path):
@@ -35,8 +59,8 @@ def gdf_to_df(gdf):
     gdf = gdf.drop(columns = ['geometry'])
     return gdf
 
-
-sp_distritos = load_and_prepare_dataframe(Path("data/distritos_shape/distritos.geojson"))
+distritos = encontrar_arquivo('distritos.geojson')
+sp_distritos = load_and_prepare_dataframe(distritos)
 # lookup zonas fora de operacao urbana
 lookup_f_op = pd.read_excel(Path('data/lookups/Zonas_fora_de_operacao_urbana_att_2.xlsx'))
 lookup_f_op["Potencial para projeto imobiliário?"] = lookup_f_op["Potencial para projeto imobiliário"].map(
@@ -59,8 +83,7 @@ col_padding, col1, col_padding2 = st.columns([0.2, 1, 0.2])
 with col1:
     filtro_potencial = st.multiselect('Potencial', potenciais_possiveis, default=potenciais_possiveis)
 
-# potencial_imobiliario = st.checkbox('Mostrar apenas Zoneamentos com potencial para projeto imobiliário')
-# operação_urbana = st.checkbox('Operação Urbana')
+
 
 lookup_filtered = lookup_f_op[(lookup_f_op['Potencial'].isin(filtro_potencial))]
 # if potencial_imobiliario:
