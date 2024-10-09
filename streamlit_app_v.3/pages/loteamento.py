@@ -109,35 +109,16 @@ col_padding, col1, col_padding2 = st.columns([0.2, 1, 0.2])
 with col1:
     filtro_potencial = st.multiselect('Potencial', potenciais_possiveis, default=potenciais_possiveis)
 
-
-
 lookup_filtered = lookup_f_op[(lookup_f_op['Potencial'].isin(filtro_potencial))]
-# if potencial_imobiliario:
-#     lookup_filtered = lookup_filtered[lookup_filtered['Potencial para projeto imobiliário'] == True]
-
-
-# Filtro de distritos
-# distritos_filtrados = st.multiselect('Distritos de Interesse',sp_zonas['NOME_DIST'].unique())
-# =======
-# zonas_filtradas = st.multiselect('Zonas de Interesse', lookup_filtered['Tipo de Zona'].unique())
-# # Filtro por zonas
-# if zonas_filtradas:
-#     gdf_filtered = sp_zonas[sp_zonas['zl_zona'].isin(zonas_filtradas)]
-#
-#     #Filtro de distritos
-#     distritos_filtrados = st.multiselect('Distritos de Interesse',gdf_filtered['NOME_DIST'].unique())
-#
-#     if distritos_filtrados:
-#         gdf_filtered = gdf_filtered[gdf_filtered['NOME_DIST'].isin(distritos_filtrados)]
 
 zonas_filtradas = st.selectbox('Zonas de Interesse', sorted(lookup_filtered['Tipo de Zona'].unique()))
 # Filtro por zonas
 if zonas_filtradas:
     arquivo_zona_filtrada = encontrar_diretorio(str(zonas_filtradas))
     gdf_filtered = load_and_prepare_data(arquivo_zona_filtrada)
-    # Filtro de operações urbanas
-    # if operação_urbana:
-    #     gdf_filtered = gdf_filtered[gdf_filtered['OUCAB'] == True]
+    #Filtro de tipo
+    tipo_filtrado = st.multiselect('Tipo',sorted(gdf_filtered['tipo'].unique()),default=gdf_filtered['tipo'].unique())
+    gdf_filtered=gdf_filtered[gdf_filtered['tipo'].isin(tipo_filtrado)]
 
     # Filtro de distritos
     distritos_filtrados = st.selectbox('Distritos de Interesse', sorted(gdf_filtered['NOME_DIST'].unique()))
