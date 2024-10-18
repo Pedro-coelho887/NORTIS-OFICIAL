@@ -8,7 +8,7 @@ openpyxl
 geopandas
 streamlit
 plotly
-sklearn
+scikit-learn
 geopy
 shapely
 pathlib
