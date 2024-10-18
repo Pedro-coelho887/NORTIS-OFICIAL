@@ -1,12 +1,12 @@
 import streamlit as st
 import plotly.graph_objects as go
 import geopandas as gpd
-
+from Search_archives import encontrar_arquivo
 
 MAPBOX_USERNAME = "projetodados"
 MAPBOX_ACCESS_TOKEN = "pk.eyJ1IjoicHJvamV0b2RhZG9zIiwiYSI6ImNtMXdiOTEydDA1czEyaW41MDYwamIwdGQifQ.CntGc8JTYWf6b9tveFDAVQ"
 
-file_path = "data/distritos_shape/distritos.geojson"
+file_path = encontrar_arquivo('distritos.geojson')
 gdf_fronteiras = gpd.read_file(file_path)
 
 # Set the Mapbox access token globally
