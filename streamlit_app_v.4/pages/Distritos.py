@@ -1,8 +1,9 @@
 import streamlit as st
 import plotly.graph_objects as go
 import geopandas as gpd
+from Search.Search_archives import encontrar_arquivo
 
-file_path = "data/distritos_shape/distritos.geojson"
+file_path = encontrar_arquivo('distritos.geojson')
 gdf_fronteiras = gpd.read_file(file_path)
 
 # Função para traçar as fronteiras dos distritos

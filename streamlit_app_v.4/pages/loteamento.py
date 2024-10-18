@@ -8,8 +8,8 @@ from streamlit_plotly_events import plotly_events
 # internal imports
 from plot.plot_zones import plot_zones_with_colors
 from plot.Distritos import plot_borders
-from plot.Search_archives import encontrar_arquivo
-from plot.Search_archives import encontrar_diretorio
+from Search.Search_Archives import encontrar_arquivo
+from Search.Search_Diretory import encontrar_diretorio
 
 # Carregar e preparar dados
 @st.cache_data

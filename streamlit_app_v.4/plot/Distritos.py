@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import geopandas as gpd
-from Search_archives import encontrar_arquivo
+from Search.Search_Archives import encontrar_arquivo
 
 MAPBOX_USERNAME = "projetodados"
 MAPBOX_ACCESS_TOKEN = "pk.eyJ1IjoicHJvamV0b2RhZG9zIiwiYSI6ImNtMXdiOTEydDA1czEyaW41MDYwamIwdGQifQ.CntGc8JTYWf6b9tveFDAVQ"
