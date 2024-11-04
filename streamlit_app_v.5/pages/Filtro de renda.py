@@ -5,7 +5,7 @@ import geopandas as gpd
 import pandas as pd
 import os
 from unidecode import unidecode
-from streamlit_plotly_events import plotly_events
+#from streamlit_plotly_events import plotly_events
 # internal imports
 from plot.plot_zones import plot_zones_with_colors
 from plot.Distritos import plot_borders

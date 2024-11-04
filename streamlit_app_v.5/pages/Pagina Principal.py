@@ -14,7 +14,7 @@ from plot.plot_zones import plot_zones_with_colors
 from plot.Distritos import plot_borders
 from Search.Search_Archives import encontrar_arquivo
 from Search.Search_Diretory import encontrar_diretorio
-from unidecode import unidecode
+import unidecode
 from Estabelecimentos.Funcoes_Estabelecimentos import *
 
 # Carregar e preparar dados
