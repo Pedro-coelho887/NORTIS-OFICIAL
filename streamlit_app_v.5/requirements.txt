@@ -12,3 +12,5 @@ scikit-learn
 geopy
 shapely
 pathlib
+haversine
+unidecode
