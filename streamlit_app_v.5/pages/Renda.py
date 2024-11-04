@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib import cm
 from matplotlib.colors import Normalize
-import unidecode
+from unidecode import unidecode
 import os
 import plotly.express as px
 import plotly.graph_objects as go
