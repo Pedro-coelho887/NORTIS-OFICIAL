@@ -100,7 +100,7 @@ distritos = encontrar_arquivo('distritos.geojson')
 sp_distritos = load_and_prepare_dataframe(distritos)
 
 # Carregar os dados dos pontos de mobilidade
-mobilidade = load_all_companies_data('data/shapefiles/transporte/output_xlsx_files/')
+mobilidade = load_all_companies_data(encontrar_diretorio('output_xlsx_files'))
 
 # lookup zonas fora de operacao urbana NORTIS
 operacao_urbana_n = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
