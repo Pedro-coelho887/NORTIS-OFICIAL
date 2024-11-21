@@ -100,7 +100,7 @@ distritos = encontrar_arquivo('distritos.geojson')
 sp_distritos = load_and_prepare_dataframe(distritos)
 
 # Carregar os dados dos pontos de mobilidade
-mobilidade = load_all_companies_data('data/shapefiles/transporte/output_xlsx_files/')
+mobilidade = load_all_companies_data(encontrar_diretorio('output_xlsx_files'))
 
 # lookup zonas fora de operacao urbana NORTIS
 operacao_urbana_n = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
@@ -125,7 +125,7 @@ lookup_f_op_v["Potencial para projeto imobiliário?"] = lookup_f_op_n["Potencial
 potenciais_possiveis_v = lookup_f_op_v['Potencial'].unique()
 territorio_possiveis_v = lookup_f_op_v['Território'].unique()
 #Empresas
-empresas_possiveis = ['NORTIS','Vibra']
+empresas_possiveis = ['NORTIS','VIBRA']
 # Carregar dados de renda média (desnecessário)
 arquivo_renda = encontrar_arquivo('Renda_Por_Faixa_Distritos.xlsx')
 df_renda = pd.read_excel(arquivo_renda, sheet_name='Renda Média', skiprows=1)
@@ -160,7 +160,7 @@ with st.sidebar:
     filtro_potencial = st.multiselect('Potencial', potenciais_possiveis, default=potenciais_possiveis)
     if filtro_empresas == 'NORTIS':
         lookup_filtered = lookup_f_op_n[(lookup_f_op_n['Potencial'].isin(filtro_potencial))]
-    elif filtro_empresas == 'Vibra':
+    elif filtro_empresas == 'VIBRA':
         lookup_filtered = lookup_f_op_v[(lookup_f_op_v['Potencial'].isin(filtro_potencial))]
 
     #zonas_filtradas = st.selectbox('Zonas de Interesse', sorted(lookup_filtered['Tipo de Zona'].unique()))
