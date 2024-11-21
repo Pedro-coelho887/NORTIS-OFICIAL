@@ -100,7 +100,7 @@ distritos = encontrar_arquivo('distritos.geojson')
 sp_distritos = load_and_prepare_dataframe(distritos)
 
 # Carregar os dados dos pontos de mobilidade
-mobilidade = load_all_companies_data(encontrar_diretorio('output_xlsx_files'))
+mobilidade = load_all_companies_data('data/shapefiles/transporte/output_xlsx_files/')
 
 # lookup zonas fora de operacao urbana NORTIS
 operacao_urbana_n = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
@@ -404,49 +404,54 @@ if distritos_filtrados:
         )
 
         if has_estabelecimentos or has_mobility_points:
-            filtered_estabelecimentos = filter_estabelecimentos_by_distance(estabelecimentos, selection_df, distance)
+            try:
+                filtered_estabelecimentos = filter_estabelecimentos_by_distance(estabelecimentos, selection_df, distance)
 
-            if not filtered_estabelecimentos.empty:
-                # Contagem de estabelecimentos por tipo
-                count_estabelecimentos_by_type = filtered_estabelecimentos.loc[:, 'Tipo'].value_counts()
+                if not filtered_estabelecimentos.empty:
+                    # Contagem de estabelecimentos por tipo
+                    count_estabelecimentos_by_type = filtered_estabelecimentos.loc[:, 'Tipo'].value_counts()
 
-                # Encontrar o estabelecimento mais próximo para cada tipo
-                closest_estabelecimento_by_type = filtered_estabelecimentos.sort_values(by=['Tipo', 'Distancia (m)'])
-                closest_estabelecimento_by_type = closest_estabelecimento_by_type[
-                    ["Rede", "Nome", "Tipo", "Endereço", "Bairro", "Distancia (m)"]
-                ].dropna(axis=1, how='all')
+                    # Encontrar o estabelecimento mais próximo para cada tipo
+                    closest_estabelecimento_by_type = filtered_estabelecimentos.sort_values(by=['Tipo', 'Distancia (m)'])
+                    closest_estabelecimento_by_type = closest_estabelecimento_by_type[
+                        ["Rede", "Nome", "Tipo", "Endereço", "Bairro", "Distancia (m)"]
+                    ].dropna(axis=1, how='all')
 
-                # UI Melhorada
-                st.subheader("Análise de Estabelecimentos")
+                    # UI Melhorada
+                    st.subheader("Análise de Estabelecimentos")
 
-                # Usar colunas para organizar a apresentação
-                col1, col2 = st.columns(2)
+                    # Usar colunas para organizar a apresentação
+                    col1, col2 = st.columns(2)
 
-                with col1:
-                    # Gráfico de barras para a contagem de tipos
-                    st.markdown("### Estabelecimentos Próximos")
-                    fig_count = px.bar(
-                        count_estabelecimentos_by_type,
-                        x=count_estabelecimentos_by_type.index,
-                        y=count_estabelecimentos_by_type.values,
-                        labels={'x': 'Tipo', 'y': 'Quantidade'},
-                        title="Distribuição de Estabelecimentos"
-                    )
-                    st.plotly_chart(fig_count, use_container_width=True)
+                    with col1:
+                        # Gráfico de barras para a contagem de tipos
+                        st.markdown("### Estabelecimentos Próximos")
+                        fig_count = px.bar(
+                            count_estabelecimentos_by_type,
+                            x=count_estabelecimentos_by_type.index,
+                            y=count_estabelecimentos_by_type.values,
+                            labels={'x': 'Tipo', 'y': 'Quantidade'},
+                            title="Distribuição de Estabelecimentos"
+                        )
+                        st.plotly_chart(fig_count, use_container_width=True)
 
-                with col2:
-                    # Seletor de Tipo de Estabelecimento
-                    st.subheader("Procurar por tipo")
-                    tipo = st.selectbox('Selecione o Tipo de Estabelecimento', filtered_estabelecimentos['Tipo'].unique())
+                    with col2:
+                        # Seletor de Tipo de Estabelecimento
+                        st.subheader("Procurar por tipo")
+                        tipo = st.selectbox('Selecione o Tipo de Estabelecimento',
+                                            filtered_estabelecimentos['Tipo'].unique())
 
-                    # Mostrar a contagem do tipo selecionado
-                    count_tipo = count_estabelecimentos_by_type[count_estabelecimentos_by_type.index == tipo]
-                    st.markdown(f"### Quantidade de {tipo}:  {count_tipo.values[0]}")
+                        # Mostrar a contagem do tipo selecionado
+                        count_tipo = count_estabelecimentos_by_type[count_estabelecimentos_by_type.index == tipo]
+                        st.markdown(f"### Quantidade de {tipo}:  {count_tipo.values[0]}")
 
-                    # Mostrar os estabelecimentos mais próximos do tipo selecionado
-                    st.markdown(f"### Estabelecimento Mais Próximo - {tipo}")
-                    closest_tipo = closest_estabelecimento_by_type[closest_estabelecimento_by_type["Tipo"] == tipo]
-                    st.table(closest_tipo)
+                        # Mostrar os estabelecimentos mais próximos do tipo selecionado
+                        st.markdown(f"### Estabelecimento Mais Próximo - {tipo}")
+                        closest_tipo = closest_estabelecimento_by_type[closest_estabelecimento_by_type["Tipo"] == tipo]
+                        st.table(closest_tipo)
+            except:
+                pass
+
         # Filtrar pontos de mobilidade próximos aos terrenos selecionados
         if mobility_points_selected and selection_df is not None and not selection_df.empty:
             filtered_mobility_points = filter_mobility_points_by_distance(mobilidade, selection_df, distance)
