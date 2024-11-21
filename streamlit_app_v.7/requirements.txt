@@ -14,3 +14,4 @@ shapely
 pathlib
 streamlit_plotly_events
 unidecode
+haversine

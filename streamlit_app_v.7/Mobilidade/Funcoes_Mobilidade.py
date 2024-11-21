@@ -166,3 +166,65 @@ def convert_km_to_degree(km):
 def custom_great_circle(u, v):
     # u e v são vetores contendo [latitude, longitude]
     return great_circle(u, v).km
+
+
+# Função para filtrar estabelecimentos com base na distância
+def filter_mobility_points_by_distance(mobilidade, selection_df, radius_km):
+    """
+    Filtra os pontos de mobilidade que estão dentro de radius_km de qualquer ponto em selection_df.
+
+    Parameters:
+    - mobilidade (dict): Dicionário onde as chaves são os tipos de mobilidade e os valores são DataFrames com colunas 'Latitude' e 'Longitude'.
+    - selection_df (pd.DataFrame): DataFrame com colunas 'Latitude' e 'Longitude' dos pontos selecionados.
+    - radius_km (float): Raio de filtragem em quilômetros.
+
+    Returns:
+    - filtered_mobility (pd.DataFrame): DataFrame combinado com todos os pontos de mobilidade filtrados.
+    """
+    filtered_mobility_list = []
+
+    for tipo, mobility_df in mobilidade.items():
+        if mobility_df is not None and not mobility_df.empty:
+            # Converter pontos de mobilidade para GeoDataFrame
+            mobility_gdf = gpd.GeoDataFrame(
+                mobility_df,
+                geometry=gpd.points_from_xy(mobility_df.Longitude, mobility_df.Latitude),
+                crs="EPSG:4326"  # Coordenadas geográficas
+            )
+
+            # Converter pontos selecionados para GeoDataFrame
+            selection_gdf = gpd.GeoDataFrame(
+                selection_df,
+                geometry=gpd.points_from_xy(selection_df.Longitude, selection_df.Latitude),
+                crs="EPSG:4326"
+            )
+
+            # Projetar para um CRS métrico (Web Mercator)
+            mobility_gdf = mobility_gdf.to_crs(epsg=3857)
+            selection_gdf = selection_gdf.to_crs(epsg=3857)
+
+            # Criar buffers ao redor dos pontos selecionados
+            selection_gdf['buffer'] = selection_gdf.geometry.buffer(radius_km * 1000)  # Converter km para metros
+
+            # Combinar todos os buffers em uma única geometria
+            total_buffer = selection_gdf['buffer'].unary_union
+
+            # Filtrar pontos dentro do buffer
+            filtered_gdf = mobility_gdf[mobility_gdf.geometry.within(total_buffer)].copy()
+
+            # Calcular a distância de cada ponto ao ponto selecionado mais próximo
+            filtered_gdf['Distancia (m)'] = filtered_gdf.geometry.apply(
+                lambda geom: selection_gdf.distance(geom).min()
+            ).round(0).astype(int)
+
+            # Adicionar o tipo de mobilidade ao DataFrame filtrado
+            filtered_gdf['Tipo'] = tipo
+
+            # Converter de volta para CRS original e armazenar
+            filtered_gdf = filtered_gdf.to_crs(epsg=4326)
+            filtered_mobility_list.append(filtered_gdf)
+
+    if filtered_mobility_list:
+        return pd.concat(filtered_mobility_list).drop(columns='geometry')
+    else:
+        return pd.DataFrame()

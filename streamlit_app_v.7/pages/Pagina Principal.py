@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import plotly.graph_objects as go
 import plotly.express as px
+import time
 from geopy.distance import geodesic
 from shapely.geometry import mapping
 
@@ -17,6 +18,7 @@ from Search.Search_Archives import encontrar_arquivo
 from Search.Search_Diretory import encontrar_diretorio
 from unidecode import unidecode
 from Estabelecimentos.Funcoes_Estabelecimentos import *
+from Mobilidade.Funcoes_Mobilidade import *
 
 st.set_page_config(layout="wide")
 
@@ -68,24 +70,37 @@ sul = ['CAMPO LIMPO', 'CAPAO REDONDO', 'VILA ANDRADE', 'CIDADE DUTRA', 'GRAJAU',
 
 color_map = {'lote': 'green', 'condominio': 'blue'}
 
-color_dict = {
+color_dict_estabelecimentos = {
     'Escola Privada': 'red',
     'Escola Pública': 'brown',
     'Fast Food': 'green',
     'Agencia Bancaria': 'blue',
     'Academia de Ginastica': 'yellow',
     'Faculdade': 'darkgreen',
-    'Hipermercados e Supermercados': 'white',
+    'Hipermercados e Supermercados': 'teal',
     'Hospital': 'cyan',
     'Petshop': 'purple',
     'Restaurantes': 'orange',
     'Shopping Center': 'magenta',
     'Terminal de ônibus': 'beige',
-    'Feiras Livres': 'pink'
+    'Feira Livre': 'pink'
+}
+
+# Definir cores para os pontos de mobilidade
+color_dict_mobility = {
+    'Estacao de Metro': 'darkred',
+    'Projetos de Estacao de Metro': 'royalblue',
+    'Estacao de Trem': 'forestgreen',
+    'Projetos de Estacao de Trem': 'black',
+    'Ponto de onibus': 'goldenrod',
+    'Terminal de onibus': 'darkorange',
 }
 
 distritos = encontrar_arquivo('distritos.geojson')
 sp_distritos = load_and_prepare_dataframe(distritos)
+
+# Carregar os dados dos pontos de mobilidade
+mobilidade = load_all_companies_data('data/shapefiles/transporte/output_xlsx_files/')
 
 # lookup zonas fora de operacao urbana NORTIS
 operacao_urbana_n = encontrar_arquivo('Zonas_fora_de_operacao_urbana_att_2.xlsx')
@@ -220,8 +235,25 @@ with st.sidebar:
         # Initialize selection_df
         selection_df = pd.DataFrame()
 
+        distance = 1.0
+        # Mostrar mobilidade
+        filtered_mobility_points = None
+        st.markdown('Pontos de Mobilidade')
+        mobility_types = list(mobilidade.keys())
+
+        # Checkbox para selecionar/deselecionar todos os pontos de mobilidade
+        select_all_mobility = st.checkbox("Mostrar mobilidade", value=False)
+
+        # Multiselect para os tipos de mobilidade
+        if select_all_mobility:
+            mobility_points_selected = st.multiselect('Mobilidade', mobility_types,
+                                                      default=mobility_types)
+        else:
+            mobility_points_selected = st.multiselect('Mobilidade', mobility_types, default=[])
+
         # mostrar estabelecimentos
-        estabelecimentos_selecionados = st.checkbox('Mostrar Estabelecimentos', value=True)
+        estabelecimentos = None
+        estabelecimentos_selecionados = st.checkbox('Mostrar Estabelecimentos', value=False)
 
         if estabelecimentos_selecionados:
             estabelecimentos_path = encontrar_arquivo('estabelecimentos_dentro_contorno.csv')
@@ -263,11 +295,11 @@ if distritos_filtrados:
 
     fig = plot_borders(gdf_distritos_f, fig, mapbox_style=mapbox_style)
 
-    if estabelecimentos_selecionados and not estabelecimentos.empty:                
-            
+    if estabelecimentos_selecionados and estabelecimentos is not None and not estabelecimentos.empty:
+
         # Define a color map for different types of establishments (random)
         for tipo in estabelecimentos['Tipo'].unique():
-            estabelecimento_color_map = {tipo: color_dict.get(tipo, "#000000") for tipo in estabelecimentos['Tipo'].unique()}
+            estabelecimento_color_map = {tipo: color_dict_estabelecimentos.get(tipo, "#000000") for tipo in estabelecimentos['Tipo'].unique()}
 
 
         # Add establishments to the map with different colors based on their type
@@ -298,10 +330,31 @@ if distritos_filtrados:
             x=0.89,
             title="Legenda",
         ))
-    
+
+    # Plotar pontos de mobilidade
+    print(mobility_points_selected)
+    if mobility_points_selected:
+        for tipo in mobility_points_selected:
+            df_mobility = mobilidade.get(tipo)  # Obtem o DataFrame para o tipo selecionado
+            if df_mobility is not None and not df_mobility.empty:
+                fig.add_trace(go.Scattermapbox(
+                    lat=df_mobility['Latitude'],
+                    lon=df_mobility['Longitude'],
+                    mode='markers',
+                    marker=dict(size=8, color=color_dict_mobility.get(tipo, 'blue'), opacity=0.8),
+                    name=tipo,
+                    cluster={"enabled": False},
+                    text=tipo,
+                    hoverinfo='text',
+                    selected=dict(marker=dict(opacity=0.9)),
+                    unselected=dict(marker=dict(opacity=0.9)),
+                ))
+
+
     # Display the map with selection enabled
     event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points", "box", "lasso"], id="map_main")
-
+    if "reload" not in st.session_state:
+        st.session_state["reload"] = False
     if event:
         latitudes = []
         longitudes = []
@@ -310,69 +363,133 @@ if distritos_filtrados:
 
         # Extract selected points
         for point in event.selection["points"]:
-            coordinates = point.get("ct")
-            sqlcode = point.get("customdata")[1]
-            zone = point.get("customdata")[0]
-            latitude = coordinates[1]
-            longitude = coordinates[0]
-            longitudes.append(longitude)
-            latitudes.append(latitude)
-            sqlcodes.append(sqlcode)
-            zones.append(zone)
+            customdata = point.get("customdata")
+            if customdata:
+                sqlcode = customdata[1]
+                zone = customdata[0]
+                coordinates = point.get("ct")
+                latitude = coordinates[1]
+                longitude = coordinates[0]
+                longitudes.append(longitude)
+                latitudes.append(latitude)
+                sqlcodes.append(sqlcode)
+                zones.append(zone)
+            else:
+                if not st.session_state["reload"]:
+                    st.warning("Por favor, clique em um terreno no mapa.")
+                    st.session_state["reload"] = True
+                    st.rerun()
+                else:
+                    st.warning("A página foi recarregada. Por favor, clique em um terreno.")
+                    continue
 
-        selection_df = pd.DataFrame({
-            "SQL": sqlcodes,
-            "Latitude": latitudes,
-            "Longitude": longitudes,
-            "Zoneamento": zones
-        })
-        # Filtrar estabelecimentos pela distância
-        filtered_estabelecimentos = filter_estabelecimentos_by_distance(estabelecimentos, selection_df, distance)
+        if sqlcodes:
+            selection_df = pd.DataFrame({
+                "SQL": sqlcodes,
+                "Latitude": latitudes,
+                "Longitude": longitudes,
+                "Zoneamento": zones
+            })
+        else:
+            st.warning("Nenhum terreno foi selecionado.")
+        has_estabelecimentos = (
+                estabelecimentos_selecionados and
+                estabelecimentos is not None and
+                not estabelecimentos.empty
+        )
 
-        if not filtered_estabelecimentos.empty:
-            # Contagem de estabelecimentos por tipo
-            count_estabelecimentos_by_type = filtered_estabelecimentos.loc[:, 'Tipo'].value_counts()
+        has_mobility_points = (
+                filtered_mobility_points is not None and
+                not filtered_mobility_points.empty
+        )
 
-            # Encontrar o estabelecimento mais próximo para cada tipo
-            closest_estabelecimento_by_type = filtered_estabelecimentos.sort_values(by=['Tipo', 'Distancia (m)'])
-            closest_estabelecimento_by_type = closest_estabelecimento_by_type[
-                ["Rede", "Nome", "Tipo", "Endereço", "Bairro", "Distancia (m)"]
-            ].dropna(axis=1, how='all')
+        if has_estabelecimentos or has_mobility_points:
+            filtered_estabelecimentos = filter_estabelecimentos_by_distance(estabelecimentos, selection_df, distance)
 
-            # UI Melhorada
-            st.subheader("Análise de Estabelecimentos")
+            if not filtered_estabelecimentos.empty:
+                # Contagem de estabelecimentos por tipo
+                count_estabelecimentos_by_type = filtered_estabelecimentos.loc[:, 'Tipo'].value_counts()
+
+                # Encontrar o estabelecimento mais próximo para cada tipo
+                closest_estabelecimento_by_type = filtered_estabelecimentos.sort_values(by=['Tipo', 'Distancia (m)'])
+                closest_estabelecimento_by_type = closest_estabelecimento_by_type[
+                    ["Rede", "Nome", "Tipo", "Endereço", "Bairro", "Distancia (m)"]
+                ].dropna(axis=1, how='all')
+
+                # UI Melhorada
+                st.subheader("Análise de Estabelecimentos")
+
+                # Usar colunas para organizar a apresentação
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    # Gráfico de barras para a contagem de tipos
+                    st.markdown("### Estabelecimentos Próximos")
+                    fig_count = px.bar(
+                        count_estabelecimentos_by_type,
+                        x=count_estabelecimentos_by_type.index,
+                        y=count_estabelecimentos_by_type.values,
+                        labels={'x': 'Tipo', 'y': 'Quantidade'},
+                        title="Distribuição de Estabelecimentos"
+                    )
+                    st.plotly_chart(fig_count, use_container_width=True)
+
+                with col2:
+                    # Seletor de Tipo de Estabelecimento
+                    st.subheader("Procurar por tipo")
+                    tipo = st.selectbox('Selecione o Tipo de Estabelecimento', filtered_estabelecimentos['Tipo'].unique())
+
+                    # Mostrar a contagem do tipo selecionado
+                    count_tipo = count_estabelecimentos_by_type[count_estabelecimentos_by_type.index == tipo]
+                    st.markdown(f"### Quantidade de {tipo}:  {count_tipo.values[0]}")
+
+                    # Mostrar os estabelecimentos mais próximos do tipo selecionado
+                    st.markdown(f"### Estabelecimento Mais Próximo - {tipo}")
+                    closest_tipo = closest_estabelecimento_by_type[closest_estabelecimento_by_type["Tipo"] == tipo]
+                    st.table(closest_tipo)
+        # Filtrar pontos de mobilidade próximos aos terrenos selecionados
+        if mobility_points_selected and selection_df is not None and not selection_df.empty:
+            filtered_mobility_points = filter_mobility_points_by_distance(mobilidade, selection_df, distance)
+
+        if filtered_mobility_points is not None and not filtered_mobility_points.empty:
+            # Contagem de pontos de mobilidade por tipo
+            count_mobility_by_type = filtered_mobility_points['Tipo'].value_counts()
+
+            # Encontrar o ponto de mobilidade mais próximo para cada tipo
+            closest_mobility_by_type = filtered_mobility_points.sort_values(by=['Tipo', 'Distancia (m)'])
+            closest_mobility_by_type = closest_mobility_by_type.drop_duplicates(subset=['Tipo'])
+
+            # UI Melhorada para pontos de mobilidade
+            st.subheader("Análise de Pontos de Mobilidade")
 
             # Usar colunas para organizar a apresentação
-            col1, col2 = st.columns(2)
+            col3, col4 = st.columns(2)
 
-            with col1:
-                # Gráfico de barras para a contagem de tipos
-                st.markdown("### Estabelecimentos Próximos")
-                fig_count = px.bar(
-                    count_estabelecimentos_by_type,
-                    x=count_estabelecimentos_by_type.index,
-                    y=count_estabelecimentos_by_type.values,
+            with col3:
+                # Gráfico de barras para a contagem de tipos de mobilidade
+                st.markdown("### Pontos de Mobilidade Próximos")
+                fig_mobility_count = px.bar(
+                    count_mobility_by_type,
+                    x=count_mobility_by_type.index,
+                    y=count_mobility_by_type.values,
                     labels={'x': 'Tipo', 'y': 'Quantidade'},
-                    title="Distribuição de Estabelecimentos"
+                    title="Distribuição de Pontos de Mobilidade"
                 )
-                st.plotly_chart(fig_count, use_container_width=True)
+                st.plotly_chart(fig_mobility_count, use_container_width=True)
 
-            with col2:
-                # Seletor de Tipo de Estabelecimento
-                st.subheader("Procurar por tipo")
-                tipo = st.selectbox('Selecione o Tipo de Estabelecimento', filtered_estabelecimentos['Tipo'].unique())
+            with col4:
+                # Seletor de Tipo de Mobilidade
+                st.subheader("Procurar por tipo de mobilidade")
+                tipo_mob = st.selectbox('Selecione o Tipo de Mobilidade', filtered_mobility_points['Tipo'].unique())
 
                 # Mostrar a contagem do tipo selecionado
-                count_tipo = count_estabelecimentos_by_type[count_estabelecimentos_by_type.index == tipo]
-                st.markdown(f"### Quantidade de {tipo}:  {count_tipo.values[0]}")
+                count_tipo_mob = count_mobility_by_type[count_mobility_by_type.index == tipo_mob]
+                st.markdown(f"### Quantidade de {tipo_mob}:  {count_tipo_mob.values[0]}")
 
-                # Mostrar os estabelecimentos mais próximos do tipo selecionado
-                st.markdown(f"### Estabelecimento Mais Próximo - {tipo}")
-                closest_tipo = closest_estabelecimento_by_type[closest_estabelecimento_by_type["Tipo"] == tipo]
-                st.table(closest_tipo)
-
-        
-
+                # Mostrar o ponto de mobilidade mais próximo do tipo selecionado
+                st.markdown(f"### Ponto de Mobilidade Mais Próximo - {tipo_mob}")
+                closest_tipo_mob = closest_mobility_by_type[closest_mobility_by_type["Tipo"] == tipo_mob]
+                st.table(closest_tipo_mob[["Tipo", "Latitude", "Longitude", "Distancia (m)"]])
 
 if st.button("Ver ITBI"):
     @st.cache_data
