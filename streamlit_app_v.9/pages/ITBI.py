@@ -83,7 +83,7 @@ sp_distritos = load_geojson(distritos)
 
 tabela_ITBI = encontrar_arquivo('tabela_filtros_ITBI_finalizada.csv')
 dados_ITBI = pd.read_csv(tabela_ITBI, dtype={'SQL': 'str'})
-dados_ITBI['Data de Transação'] = pd.to_datetime(dados_ITBI['Data de Transação'], errors='coerce')
+dados_ITBI['Data de Transação'] = pd.to_datetime(dados_ITBI['Data de Transação'], errors='coerce',dayfirst=True)
 dados_ITBI = carregar_dados_ITBI(encontrar_arquivo('dados_ITBI.csv'))
 
 licencas = cache(pd.read_excel(encontrar_arquivo('licencas e alvaras.xlsx')))
