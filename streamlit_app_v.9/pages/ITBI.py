@@ -67,7 +67,7 @@ def carregar_dados_ITBI(directory_path):
                                 'Natureza de Transação':'str',
                                 'NOME_DIST':'str',
                                 'zl_zona':'str'
-                                })
+                                },low_memory=False)
     transacoes['Matrícula do Imóvel'] = transacoes['Matrícula do Imóvel'].apply(lambda x: x.split('.')[0])
     transacoes['CEP'] = transacoes['CEP'].apply(lambda x: x.split('.')[0])
     transacoes['Número'] = transacoes['Número'].apply(lambda x: x.split('.')[0])
